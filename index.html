@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학부모 개별 메시지 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* 스크롤바 스타일링 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* 모달 애니메이션 */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
+        }
+        .modal-leave {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .modal-leave-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 300ms, transform 300ms;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        
+        <header class="text-center mb-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">학부모 개별 메시지 생성기</h1>
+            <p class="text-gray-500 mt-2">CSV 파일을 업로드하여 학생별 맞춤 안내 메시지를 생성하세요.</p>
+        </header>
+
+        <!-- 사용 방법 안내 버튼 (개선) -->
+        <div class="mb-6">
+            <button id="how-to-use-btn" class="w-full flex items-center justify-center py-3 px-4 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 text-base">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>사용 방법이 궁금하신가요? (클릭)</span>
+            </button>
+        </div>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 왼쪽 섹션: 입력 -->
+            <div class="space-y-6">
+                <!-- 1. 메시지 템플릿 -->
+                <div>
+                    <label for="message-template" class="block text-lg font-semibold text-gray-700 mb-2">1. 메시지 템플릿 수정</label>
+                    <textarea id="message-template" rows="12" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 custom-scrollbar">학부모(보호자)님, 안녕하십니까?
+
+서울대학교에서는 교육부와 한국교육학술정보원(KERIS)의 위탁을 받아 디지털 교육의 성과를 체계적으로 분석하고, 디지털 기반 교육의 성공적인 안착을 위해 「디지털교육 성과 진단 및 효과 분석」 연구를 수행하고 있습니다.
+
+자녀분의 학급이 조사대상 학급으로 선정됨에 따라, 학생 및 학부모(보호자)의 연구 참여 동의 여부를 확인하고자 합니다. 아래 링크에 접속하시어 연구 내용을 자세히 읽어보신 후 동의 여부를 결정하여 주시길 바랍니다.
+
+감사합니다.
+                    </textarea>
+                </div>
+
+                <!-- 2. CSV 파일 업로드 및 기능 버튼 -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-700 mb-2">2. 동의서 링크 파일 (CSV)</label>
+                    <input type="file" id="csv-file" accept=".csv" class="w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100 transition duration-200
+                    "/>
+                    <p class="text-xs text-gray-500 mt-1 mb-3">※ 첫 번째 열은 학생 이름, 두 번째 열은 링크 주소로 구성된 CSV 파일을 사용해주세요.</p>
+                    
+                    <div class="flex space-x-2">
+                        <button id="download-template-btn" class="flex-1 py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-200 text-sm">
+                            CSV 템플릿 다운로드
+                        </button>
+                        <button id="reset-btn" class="flex-1 py-2 px-4 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200 text-sm">
+                            초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 섹션: 결과 -->
+            <div class="flex flex-col">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">3. 생성된 메시지</h2>
+                <div id="result-container" class="flex-grow bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-y-auto h-96 custom-scrollbar">
+                    <div id="initial-placeholder" class="text-center text-gray-500 h-full flex items-center justify-center">
+                        <p>파일을 업로드하면 이곳에<br>학생별 메시지가 표시됩니다.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 사용 방법 안내 모달 -->
+    <div id="how-to-use-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 md:p-8 transform modal-enter">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">사용 방법 안내</h2>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-4 text-gray-600">
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-800 mb-2">1. 학생별 참여 링크 준비</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>관리자 사이트에서 <strong>[동의서 안내문 생성]</strong> → <strong>[링크로 다운받기]</strong>를 클릭합니다.</li>
+                        <li>다운로드한 파일에서 <strong>'학생 이름'</strong>과 <strong>'참여 링크'</strong> 두 열의 내용만 전체 복사합니다.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-800 mb-2">2. 메시지 생성기에 정보 입력</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li><strong>[CSV 템플릿 다운로드]</strong> 버튼을 눌러 양식 파일을 받습니다.</li>
+                        <li class="font-bold text-red-600">다운로드한 CSV 파일은 반드시 'Microsoft Excel'로 열어주세요. (한셀 X)</li>
+                        <li>Excel에 복사해 두었던 '학생 이름'과 '참여 링크'를 붙여넣고 저장합니다.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-800 mb-2">3. 개별 메시지 생성 및 발송</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li><strong>[파일 선택]</strong> 버튼을 눌러 저장한 CSV 파일을 업로드합니다.</li>
+                        <li>오른쪽에 생성된 학생별 메시지에서 <strong>[메시지 복사]</strong> 버튼을 클릭하여 발송합니다.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 기본 DOM 요소
+        const csvFileInput = document.getElementById('csv-file');
+        const messageTemplateTextarea = document.getElementById('message-template');
+        const resultContainer = document.getElementById('result-container');
+        const initialPlaceholder = document.getElementById('initial-placeholder');
+        const downloadTemplateBtn = document.getElementById('download-template-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // 모달 관련 DOM 요소
+        const howToUseBtn = document.getElementById('how-to-use-btn');
+        const modal = document.getElementById('how-to-use-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalContent = modal.querySelector('div');
+
+        // 이벤트 리스너
+        csvFileInput.addEventListener('change', handleFileSelect);
+        downloadTemplateBtn.addEventListener('click', downloadTemplate);
+        resetBtn.addEventListener('click', resetApp);
+        howToUseBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            modalContent.classList.remove('modal-leave', 'modal-leave-active');
+            modalContent.classList.add('modal-enter-active');
+        }
+
+        function closeModal() {
+            modalContent.classList.remove('modal-enter-active');
+            modalContent.classList.add('modal-leave-active');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // 애니메이션 시간과 일치
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                resultContainer.innerHTML = initialPlaceholder.outerHTML;
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => processCSV(e.target.result);
+            reader.onerror = () => {
+                resultContainer.innerHTML = '<div class="text-center text-red-500 h-full flex items-center justify-center"><p>파일을 읽는 중 오류가 발생했습니다.</p></div>';
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function processCSV(csvText) {
+            const baseMessage = messageTemplateTextarea.value.trim();
+            resultContainer.innerHTML = ''; 
+            const rows = csvText.split('\n').filter(row => row.trim() !== '');
+            
+            rows.forEach((row, index) => {
+                const columns = row.split(',');
+                if (columns.length >= 2) {
+                    const studentName = columns[0].trim();
+                    const link = columns[1].trim();
+                    if (studentName && (link.startsWith('http') || link.startsWith('https'))) {
+                        const message = createMessage(baseMessage, studentName, link);
+                        const messageElement = createMessageElement(message, studentName, index);
+                        resultContainer.appendChild(messageElement);
+                    }
+                }
+            });
+
+            if (resultContainer.children.length === 0) {
+                resultContainer.innerHTML = '<div class="text-center text-gray-500 h-full flex items-center justify-center"><p>처리할 데이터가 없거나<br>CSV 형식이 올바르지 않습니다.</p></div>';
+            }
+        }
+
+        function createMessage(base, name, url) {
+            return `${base}\n\n[${name} 학부모님 전용 링크]\n${url}`;
+        }
+
+        function createMessageElement(message, name, id) {
+            const div = document.createElement('div');
+            div.className = 'bg-white p-4 rounded-lg shadow-sm mb-4 border border-gray-200';
+            const nameP = document.createElement('p');
+            nameP.className = 'font-bold text-blue-600 mb-2';
+            nameP.textContent = `${name} 학부모님`;
+            const messagePre = document.createElement('pre');
+            messagePre.id = `message-${id}`;
+            messagePre.className = 'whitespace-pre-wrap text-sm text-gray-700 p-3 bg-gray-50 rounded-md';
+            messagePre.textContent = message;
+            const copyButton = document.createElement('button');
+            copyButton.className = 'mt-3 w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200';
+            copyButton.textContent = '메시지 복사';
+            copyButton.onclick = () => copyToClipboard(`message-${id}`, copyButton);
+            div.appendChild(nameP);
+            div.appendChild(messagePre);
+            div.appendChild(copyButton);
+            return div;
+        }
+
+        function copyToClipboard(elementId, button) {
+            const textToCopy = document.getElementById(elementId).textContent;
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                button.textContent = '복사 완료!';
+                button.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                button.classList.add('bg-green-500');
+                setTimeout(() => {
+                    button.textContent = '메시지 복사';
+                    button.classList.remove('bg-green-500');
+                    button.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                }, 2000);
+            } catch (err) {
+                console.error('클립보드 복사 실패:', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadTemplate() {
+            const csvContent = "학생이름,링크주소\n강다온,https://more.kr/U2g9\n강시우,https://more.kr/F2gK\n고은호,https://more.kr/S2gV";
+            const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "학생명단_템플릿.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function resetApp() {
+            csvFileInput.value = '';
+            resultContainer.innerHTML = initialPlaceholder.outerHTML;
+        }
+    </script>
+</body>
+</html>
